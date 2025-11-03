@@ -1,0 +1,107 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-100 to-blue-100 flex items-center justify-center p-4">
+  <div class="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+    
+    <!-- Form Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
+      <div class="text-center">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Tạo mã QR Chuyển khoản</h1>
+        <p class="text-gray-500 mt-2">Nhanh chóng, tiện lợi và an toàn theo chuẩn VietQR.</p>
+      </div>
+      
+      <form class="space-y-4" (submit)="$event.preventDefault()">
+        <div>
+          <label for="bank" class="block text-sm font-medium text-gray-700 mb-1">Chọn Ngân hàng</label>
+          @switch (loadingStatus()) {
+            @case ('loading') {
+              <select id="bank" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed" disabled>
+                <option>Đang tải danh sách ngân hàng...</option>
+              </select>
+            }
+            @case ('loaded') {
+              <select id="bank" name="bank" [(ngModel)]="selectedBankBin" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                <option value="" disabled>-- Chọn ngân hàng của bạn --</option>
+                @for (bank of banks(); track bank.bin) {
+                  <option [value]="bank.bin">{{ bank.name }}</option>
+                }
+              </select>
+            }
+            @case ('error') {
+              <div class="p-3 text-sm text-red-700 bg-red-100 border border-red-300 rounded-md">
+                Không thể tải danh sách ngân hàng. Vui lòng thử lại sau.
+              </div>
+            }
+          }
+        </div>
+
+        <div>
+          <label for="accountNumber" class="block text-sm font-medium text-gray-700 mb-1">Số tài khoản</label>
+          <input type="text" id="accountNumber" name="accountNumber" [(ngModel)]="accountNumber" placeholder="Nhập số tài khoản" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150" required>
+        </div>
+
+        <div>
+          <label for="accountName" class="block text-sm font-medium text-gray-700 mb-1">Tên chủ tài khoản</label>
+          <input type="text" id="accountName" name="accountName" [(ngModel)]="accountName" placeholder="Tên trên thẻ/tài khoản" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150" required>
+        </div>
+
+        <div>
+          <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Số tiền (Tùy chọn)</label>
+          <input type="number" id="amount" name="amount" [(ngModel)]="amount" placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150" min="0">
+        </div>
+
+        <!-- Save/Saved Info Section -->
+        <div class="pt-4 border-t border-gray-200">
+          @if (savedAccount(); as acc) {
+            <div class="p-3 bg-blue-50 rounded-lg">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-800">Tài khoản đã lưu:</p>
+                  <p class="text-sm text-gray-600">{{ acc.bankName }} - {{ acc.accountNumber }}</p>
+                </div>
+                <button (click)="forgetAccount()" type="button" class="px-3 py-1 text-sm font-medium text-red-600 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
+                  Xóa
+                </button>
+              </div>
+            </div>
+          } @else {
+            <button (click)="saveAccount()" [disabled]="!canSave()" type="button" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4zm3 0a1 1 0 00-1 1v1a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1H8z" />
+              </svg>
+              Lưu tài khoản để dùng lại
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+
+    <!-- QR Code Display Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
+      @if (qrCodeUrl()) {
+        <div class="animate-fade-in w-full">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Mã QR của bạn</h2>
+          <div class="p-4 border-4 border-blue-500 rounded-lg bg-white inline-block">
+            <img [src]="qrCodeUrl()" alt="Mã QR Chuyển khoản" width="256" height="256" class="mx-auto">
+          </div>
+          <p class="mt-4 text-gray-600">Quét mã này bằng ứng dụng ngân hàng của bạn.</p>
+          <a [href]="qrCodeUrl()" [download]="qrFileName" class="mt-6 inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            Tải xuống
+          </a>
+        </div>
+      } @else {
+        <div class="flex flex-col items-center justify-center h-full text-gray-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+          </svg>
+          <p class="mt-4 text-lg">Mã QR sẽ xuất hiện ở đây</p>
+          <p class="mt-1 text-sm">Vui lòng điền đầy đủ thông tin để tạo mã.</p>
+        </div>
+      }
+    </div>
+    
+  </div>
+</div>

@@ -1,0 +1,5 @@
+{
+  "name": "Tạo QR Chuyển khoản",
+  "description": "Tạo mã QR chuyển khoản ngân hàng Việt Nam (VietQR) một cách nhanh chóng. Chọn ngân hàng, nhập thông tin tài khoản và số tiền để tạo mã QR.",
+  "requestFramePermissions": []
+}
